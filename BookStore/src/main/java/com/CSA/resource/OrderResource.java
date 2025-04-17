@@ -1,6 +1,11 @@
 package com.CSA.resource;
 
 import com.CSA.LoggerUtil.LoggerUtil;
+import com.CSA.exception.BookNotFoundException;
+import com.CSA.exception.CartNotFoundException;
+import com.CSA.exception.CustomerNotFoundException;
+import com.CSA.exception.InvalidInputException;
+import com.CSA.exception.OutOfStockException;
 import com.CSA.model.Book;
 import com.CSA.model.Cart;
 import com.CSA.model.Customer;
@@ -35,23 +40,23 @@ public class OrderResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response createOrder(@PathParam("customerId") int customerId) {
         LoggerUtil.logInfo("Request to create order for customer ID: " + customerId);
-        
-        // Validate customer exists
+          // Validate customer exists
         Customer customer = DataStore.customers.get(customerId);
         if (customer == null) {
             LoggerUtil.logWarning("Order creation failed: Customer not found with ID: " + customerId);
-            return Response.status(Status.NOT_FOUND)
-                    .entity("Customer not found with ID: " + customerId)
-                    .build();
+            throw new CustomerNotFoundException(customerId);
         }
         
         // Check if the customer has a cart and it's not empty
         Cart cart = DataStore.carts.get(customerId);
-        if (cart == null || cart.getItems().isEmpty()) {
+        if (cart == null) {
+            LoggerUtil.logWarning("Order creation failed: Cart not found for customer ID: " + customerId);
+            throw new CartNotFoundException(customerId);
+        }
+        
+        if (cart.getItems().isEmpty()) {
             LoggerUtil.logWarning("Order creation failed: Cart is empty for customer ID: " + customerId);
-            return Response.status(Status.BAD_REQUEST)
-                    .entity("Cannot create an order with an empty cart")
-                    .build();
+            throw new InvalidInputException("Cannot create an order with an empty cart");
         }
         
         // Process the order
@@ -62,24 +67,18 @@ public class OrderResource {
         for (Map.Entry<Integer, Integer> entry : cart.getItems().entrySet()) {
             int bookId = entry.getKey();
             int quantity = entry.getValue();
-            
-            // Validate book exists
+              // Validate book exists
             Book book = DataStore.books.get(bookId);
             if (book == null) {
                 LoggerUtil.logWarning("Order creation failed: Book not found with ID: " + bookId);
-                return Response.status(Status.NOT_FOUND)
-                        .entity("Book not found with ID: " + bookId)
-                        .build();
+                throw new BookNotFoundException(bookId);
             }
             
             // Check if enough stock is available
             if (book.getQuantity() < quantity) {
                 LoggerUtil.logWarning("Order creation failed: Insufficient stock for book ID: " + 
                         bookId + ", requested: " + quantity + ", available: " + book.getQuantity());
-                return Response.status(Status.BAD_REQUEST)
-                        .entity("Insufficient stock for book: " + book.getTitle() + 
-                                ", requested: " + quantity + ", available: " + book.getQuantity())
-                        .build();
+                throw new OutOfStockException(bookId, quantity, book.getQuantity());
             }
             
             // Add to order items
@@ -123,14 +122,11 @@ public class OrderResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getCustomerOrders(@PathParam("customerId") int customerId) {
         LoggerUtil.logInfo("Request to get all orders for customer ID: " + customerId);
-        
-        // Validate customer exists
+          // Validate customer exists
         Customer customer = DataStore.customers.get(customerId);
         if (customer == null) {
             LoggerUtil.logWarning("Get orders failed: Customer not found with ID: " + customerId);
-            return Response.status(Status.NOT_FOUND)
-                    .entity("Customer not found with ID: " + customerId)
-                    .build();
+            throw new CustomerNotFoundException(customerId);
         }
         
         // Get orders for the customer
@@ -155,14 +151,11 @@ public class OrderResource {
             @PathParam("orderId") int orderId) {
         
         LoggerUtil.logInfo("Request to get order ID: " + orderId + " for customer ID: " + customerId);
-        
-        // Validate customer exists
+          // Validate customer exists
         Customer customer = DataStore.customers.get(customerId);
         if (customer == null) {
             LoggerUtil.logWarning("Get order failed: Customer not found with ID: " + customerId);
-            return Response.status(Status.NOT_FOUND)
-                    .entity("Customer not found with ID: " + customerId)
-                    .build();
+            throw new CustomerNotFoundException(customerId);
         }
         
         // Get orders for the customer
@@ -179,9 +172,7 @@ public class OrderResource {
         
         if (order == null) {
             LoggerUtil.logWarning("Order not found: ID=" + orderId + " for customer ID: " + customerId);
-            return Response.status(Status.NOT_FOUND)
-                    .entity("Order not found with ID: " + orderId)
-                    .build();
+            throw new InvalidInputException("Order not found with ID: " + orderId);
         }
         
         LoggerUtil.logInfo("Retrieved order: ID=" + orderId + " for customer ID: " + customerId);

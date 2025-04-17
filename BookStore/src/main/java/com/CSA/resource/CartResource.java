@@ -1,6 +1,10 @@
 package com.CSA.resource;
 
 import com.CSA.LoggerUtil.LoggerUtil;
+import com.CSA.exception.BookNotFoundException;
+import com.CSA.exception.CartNotFoundException;
+import com.CSA.exception.CustomerNotFoundException;
+import com.CSA.exception.InvalidInputException;
 import com.CSA.model.Cart;
 import com.CSA.model.Customer;
 import com.CSA.storage.DataStore;
@@ -22,8 +26,7 @@ public class CartResource {
      * @param customerId The ID of the customer
      * @param cartItem The item to add to the cart
      * @return Response with the updated cart or error message
-     */
-    @POST
+     */    @POST
     @Path("/{customerId}/cart/items")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -34,25 +37,19 @@ public class CartResource {
         Customer customer = DataStore.customers.get(customerId);
         if (customer == null) {
             LoggerUtil.logWarning("Customer not found with ID: " + customerId);
-            return Response.status(Status.NOT_FOUND)
-                    .entity("Customer not found with ID: " + customerId)
-                    .build();
+            throw new CustomerNotFoundException(customerId);
         }
         
         // Validate book exists
         if (!DataStore.books.containsKey(cartItem.getBookId())) {
             LoggerUtil.logWarning("Book not found with ID: " + cartItem.getBookId());
-            return Response.status(Status.NOT_FOUND)
-                    .entity("Book not found with ID: " + cartItem.getBookId())
-                    .build();
+            throw new BookNotFoundException(cartItem.getBookId());
         }
         
         // Validate quantity
         if (cartItem.getQuantity() <= 0) {
             LoggerUtil.logWarning("Invalid quantity: " + cartItem.getQuantity());
-            return Response.status(Status.BAD_REQUEST)
-                    .entity("Quantity must be greater than 0")
-                    .build();
+            throw new InvalidInputException("Quantity must be greater than 0");
         }
         
         // Get or create cart for the customer
@@ -75,8 +72,7 @@ public class CartResource {
      *
      * @param customerId The ID of the customer
      * @return Response with the cart or error message
-     */
-    @GET
+     */    @GET
     @Path("/{customerId}/cart")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getCart(@PathParam("customerId") int customerId) {
@@ -86,9 +82,7 @@ public class CartResource {
         Customer customer = DataStore.customers.get(customerId);
         if (customer == null) {
             LoggerUtil.logWarning("Customer not found with ID: " + customerId);
-            return Response.status(Status.NOT_FOUND)
-                    .entity("Customer not found with ID: " + customerId)
-                    .build();
+            throw new CustomerNotFoundException(customerId);
         }
         
         // Get cart or return empty if not found
@@ -119,39 +113,30 @@ public class CartResource {
             CartItem cartItem) {
         
         LoggerUtil.logInfo("Request to update item in cart: customerId=" + customerId + ", bookId=" + bookId);
-        
-        // Validate customer exists
+          // Validate customer exists
         Customer customer = DataStore.customers.get(customerId);
         if (customer == null) {
             LoggerUtil.logWarning("Customer not found with ID: " + customerId);
-            return Response.status(Status.NOT_FOUND)
-                    .entity("Customer not found with ID: " + customerId)
-                    .build();
+            throw new CustomerNotFoundException(customerId);
         }
         
         // Validate book exists
         if (!DataStore.books.containsKey(bookId)) {
             LoggerUtil.logWarning("Book not found with ID: " + bookId);
-            return Response.status(Status.NOT_FOUND)
-                    .entity("Book not found with ID: " + bookId)
-                    .build();
+            throw new BookNotFoundException(bookId);
         }
         
         // Get cart
         Cart cart = DataStore.carts.get(customerId);
         if (cart == null || !cart.getItems().containsKey(bookId)) {
             LoggerUtil.logWarning("Item not found in cart: customerId=" + customerId + ", bookId=" + bookId);
-            return Response.status(Status.NOT_FOUND)
-                    .entity("Item not found in cart")
-                    .build();
+            throw new CartNotFoundException("Item not found in cart for customer ID: " + customerId);
         }
         
         // Validate quantity
         if (cartItem.getQuantity() <= 0) {
             LoggerUtil.logWarning("Invalid quantity: " + cartItem.getQuantity());
-            return Response.status(Status.BAD_REQUEST)
-                    .entity("Quantity must be greater than 0")
-                    .build();
+            throw new InvalidInputException("Quantity must be greater than 0");
         }
         
         // Update item quantity
@@ -176,23 +161,18 @@ public class CartResource {
             @PathParam("bookId") int bookId) {
         
         LoggerUtil.logInfo("Request to remove item from cart: customerId=" + customerId + ", bookId=" + bookId);
-        
-        // Validate customer exists
+          // Validate customer exists
         Customer customer = DataStore.customers.get(customerId);
         if (customer == null) {
             LoggerUtil.logWarning("Customer not found with ID: " + customerId);
-            return Response.status(Status.NOT_FOUND)
-                    .entity("Customer not found with ID: " + customerId)
-                    .build();
+            throw new CustomerNotFoundException(customerId);
         }
         
         // Get cart
         Cart cart = DataStore.carts.get(customerId);
         if (cart == null || !cart.getItems().containsKey(bookId)) {
             LoggerUtil.logWarning("Item not found in cart: customerId=" + customerId + ", bookId=" + bookId);
-            return Response.status(Status.NOT_FOUND)
-                    .entity("Item not found in cart")
-                    .build();
+            throw new CartNotFoundException("Item not found in cart for customer ID: " + customerId);
         }
         
         // Remove item from cart

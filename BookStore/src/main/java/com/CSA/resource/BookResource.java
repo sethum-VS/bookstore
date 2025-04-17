@@ -1,6 +1,9 @@
 package com.CSA.resource;
 
 import com.CSA.LoggerUtil.LoggerUtil;
+import com.CSA.exception.AuthorNotFoundException;
+import com.CSA.exception.BookNotFoundException;
+import com.CSA.exception.InvalidInputException;
 import com.CSA.model.Book;
 import com.CSA.storage.DataStore;
 
@@ -30,48 +33,33 @@ public class BookResource {
      * 
      * @param book The book object in JSON format
      * @return Response with the created book or error message
-     */
-    @POST
+     */    @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response addBook(Book book) {
         // Validate the incoming book object
         if (book.getTitle() == null || book.getTitle().isEmpty()) {
-            return Response.status(Status.BAD_REQUEST)
-                .entity("{\"error\": \"Book title is required\"}")
-                .build();
+            throw new InvalidInputException("Book title is required");
         }
         if (book.getAuthorId() <= 0) {
-            return Response.status(Status.BAD_REQUEST)
-                .entity("{\"error\": \"Valid author ID is required\"}")
-                .build();
+            throw new InvalidInputException("Valid author ID is required");
         }
         if (book.getIsbn() == null || book.getIsbn().isEmpty()) {
-            return Response.status(Status.BAD_REQUEST)
-                .entity("{\"error\": \"ISBN is required\"}")
-                .build();
+            throw new InvalidInputException("ISBN is required");
         }
         if (book.getPublicationYear() <= 0) {
-            return Response.status(Status.BAD_REQUEST)
-                .entity("{\"error\": \"Valid publication year is required\"}")
-                .build();
+            throw new InvalidInputException("Valid publication year is required");
         }
         if (book.getPrice() <= 0) {
-            return Response.status(Status.BAD_REQUEST)
-                .entity("{\"error\": \"Valid price is required\"}")
-                .build();
+            throw new InvalidInputException("Valid price is required");
         }
         if (book.getStockQuantity() < 0) {
-            return Response.status(Status.BAD_REQUEST)
-                .entity("{\"error\": \"Stock quantity cannot be negative\"}")
-                .build();
+            throw new InvalidInputException("Stock quantity cannot be negative");
         }
 
         // Check if the author exists
         if (!DataStore.authors.containsKey(book.getAuthorId())) {
-            return Response.status(Status.NOT_FOUND)
-                .entity("{\"error\": \"Author not found with ID: " + book.getAuthorId() + "\"}")
-                .build();
+            throw new AuthorNotFoundException(book.getAuthorId());
         }
 
         // Assign a unique book ID
@@ -106,8 +94,7 @@ public class BookResource {
      * 
      * @param id The ID of the book to retrieve
      * @return Response with the book or 404 if not found
-     */
-    @GET
+     */    @GET
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getBookById(@PathParam("id") int id) {
@@ -116,9 +103,7 @@ public class BookResource {
         Book book = DataStore.books.get(id);
         if (book == null) {
             LoggerUtil.logWarning("Book not found with ID: " + id);
-            return Response.status(Status.NOT_FOUND)
-                .entity("{\"error\": \"Book not found with ID: " + id + "\"}")
-                .build();
+            throw new BookNotFoundException(id);
         }
         
         LoggerUtil.logInfo("Retrieved book with ID: " + id);
@@ -131,8 +116,7 @@ public class BookResource {
      * @param id The ID of the book to update
      * @param book The updated book data
      * @return Response with the updated book or appropriate error status
-     */
-    @PUT
+     */    @PUT
     @Path("/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -142,55 +126,39 @@ public class BookResource {
         // Check if book exists
         if (!DataStore.books.containsKey(id)) {
             LoggerUtil.logWarning("Failed to update: Book not found with ID: " + id);
-            return Response.status(Status.NOT_FOUND)
-                .entity("{\"error\": \"Book not found with ID: " + id + "\"}")
-                .build();
+            throw new BookNotFoundException(id);
         }
         
         // Validate the updated book data
         if (book.getTitle() == null || book.getTitle().isEmpty()) {
             LoggerUtil.logWarning("Failed to update book: Title is required");
-            return Response.status(Status.BAD_REQUEST)
-                .entity("{\"error\": \"Book title is required\"}")
-                .build();
+            throw new InvalidInputException("Book title is required");
         }
         if (book.getAuthorId() <= 0) {
             LoggerUtil.logWarning("Failed to update book: Valid author ID is required");
-            return Response.status(Status.BAD_REQUEST)
-                .entity("{\"error\": \"Valid author ID is required\"}")
-                .build();
+            throw new InvalidInputException("Valid author ID is required");
         }
         if (book.getIsbn() == null || book.getIsbn().isEmpty()) {
             LoggerUtil.logWarning("Failed to update book: ISBN is required");
-            return Response.status(Status.BAD_REQUEST)
-                .entity("{\"error\": \"ISBN is required\"}")
-                .build();
+            throw new InvalidInputException("ISBN is required");
         }
         if (book.getPublicationYear() <= 0) {
             LoggerUtil.logWarning("Failed to update book: Valid publication year is required");
-            return Response.status(Status.BAD_REQUEST)
-                .entity("{\"error\": \"Valid publication year is required\"}")
-                .build();
+            throw new InvalidInputException("Valid publication year is required");
         }
         if (book.getPrice() <= 0) {
             LoggerUtil.logWarning("Failed to update book: Valid price is required");
-            return Response.status(Status.BAD_REQUEST)
-                .entity("{\"error\": \"Valid price is required\"}")
-                .build();
+            throw new InvalidInputException("Valid price is required");
         }
         if (book.getStockQuantity() < 0) {
             LoggerUtil.logWarning("Failed to update book: Stock quantity cannot be negative");
-            return Response.status(Status.BAD_REQUEST)
-                .entity("{\"error\": \"Stock quantity cannot be negative\"}")
-                .build();
+            throw new InvalidInputException("Stock quantity cannot be negative");
         }
         
         // Check if the author exists
         if (!DataStore.authors.containsKey(book.getAuthorId())) {
             LoggerUtil.logWarning("Failed to update book: Author not found with ID: " + book.getAuthorId());
-            return Response.status(Status.NOT_FOUND)
-                .entity("{\"error\": \"Author not found with ID: " + book.getAuthorId() + "\"}")
-                .build();
+            throw new AuthorNotFoundException(book.getAuthorId());
         }
         
         // Preserve the book ID
@@ -208,17 +176,14 @@ public class BookResource {
      * 
      * @param id The ID of the book to delete
      * @return Response with 204 No Content if successful, or 404 if book not found
-     */
-    @DELETE
+     */    @DELETE
     @Path("/{id}")
     public Response deleteBook(@PathParam("id") int id) {
         LoggerUtil.logInfo("Attempting to delete book with ID: " + id);
         
         if (!DataStore.books.containsKey(id)) {
             LoggerUtil.logWarning("Failed to delete: Book not found with ID: " + id);
-            return Response.status(Status.NOT_FOUND)
-                .entity("{\"error\": \"Book not found with ID: " + id + "\"}")
-                .build();
+            throw new BookNotFoundException(id);
         }
         
         DataStore.books.remove(id);

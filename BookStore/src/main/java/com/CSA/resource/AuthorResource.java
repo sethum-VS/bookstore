@@ -1,6 +1,8 @@
 package com.CSA.resource;
 
 import com.CSA.LoggerUtil.LoggerUtil;
+import com.CSA.exception.AuthorNotFoundException;
+import com.CSA.exception.InvalidInputException;
 import com.CSA.model.Author;
 import com.CSA.model.Book;
 import com.CSA.storage.DataStore;
@@ -31,24 +33,19 @@ public class AuthorResource {
      * 
      * @param author The author object to be added
      * @return Response with the newly created author
-     */
-    @POST
+     */    @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response addAuthor(Author author) {
         // Validate the author object
         if (author.getName() == null || author.getName().isEmpty()) {
             LoggerUtil.logWarning("Failed to add author: Name cannot be null or empty");
-            return Response.status(Status.BAD_REQUEST)
-                    .entity("Author name cannot be null or empty")
-                    .build();
+            throw new InvalidInputException("Author name cannot be null or empty");
         }
         
         if (author.getBiography() == null || author.getBiography().isEmpty()) {
             LoggerUtil.logWarning("Failed to add author: Biography cannot be null or empty");
-            return Response.status(Status.BAD_REQUEST)
-                    .entity("Author biography cannot be null or empty")
-                    .build();
+            throw new InvalidInputException("Author biography cannot be null or empty");
         }
         
         // Generate a unique author ID
@@ -88,8 +85,7 @@ public class AuthorResource {
      * 
      * @param id The ID of the author to retrieve
      * @return Response with the author or 404 if not found
-     */
-    @GET
+     */    @GET
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getAuthorById(@PathParam("id") int id) {
@@ -98,9 +94,7 @@ public class AuthorResource {
         Author author = DataStore.authors.get(id);
         if (author == null) {
             LoggerUtil.logWarning("Author not found with ID: " + id);
-            return Response.status(Status.NOT_FOUND)
-                    .entity("Author not found with ID: " + id)
-                    .build();
+            throw new AuthorNotFoundException(id);
         }
         
         LoggerUtil.logInfo("Retrieved author with ID: " + id);
@@ -115,8 +109,7 @@ public class AuthorResource {
      * @param id The ID of the author to update
      * @param updatedAuthor The updated author data
      * @return Response with the updated author or appropriate error status
-     */
-    @PUT
+     */    @PUT
     @Path("/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -126,24 +119,18 @@ public class AuthorResource {
         // Check if author exists
         if (!DataStore.authors.containsKey(id)) {
             LoggerUtil.logWarning("Failed to update: Author not found with ID: " + id);
-            return Response.status(Status.NOT_FOUND)
-                    .entity("Author not found with ID: " + id)
-                    .build();
+            throw new AuthorNotFoundException(id);
         }
         
         // Validate the updated author data
         if (updatedAuthor.getName() == null || updatedAuthor.getName().isEmpty()) {
             LoggerUtil.logWarning("Failed to update author: Name cannot be null or empty");
-            return Response.status(Status.BAD_REQUEST)
-                    .entity("Author name cannot be null or empty")
-                    .build();
+            throw new InvalidInputException("Author name cannot be null or empty");
         }
         
         if (updatedAuthor.getBiography() == null || updatedAuthor.getBiography().isEmpty()) {
             LoggerUtil.logWarning("Failed to update author: Biography cannot be null or empty");
-            return Response.status(Status.BAD_REQUEST)
-                    .entity("Author biography cannot be null or empty")
-                    .build();
+            throw new InvalidInputException("Author biography cannot be null or empty");
         }
         
         // Preserve the author ID
@@ -163,17 +150,14 @@ public class AuthorResource {
      * 
      * @param id The ID of the author to delete
      * @return Response with 204 No Content if successful, or 404 if author not found
-     */
-    @DELETE
+     */    @DELETE
     @Path("/{id}")
     public Response deleteAuthor(@PathParam("id") int id) {
         LoggerUtil.logInfo("Attempting to delete author with ID: " + id);
         
         if (!DataStore.authors.containsKey(id)) {
             LoggerUtil.logWarning("Failed to delete: Author not found with ID: " + id);
-            return Response.status(Status.NOT_FOUND)
-                    .entity("Author not found with ID: " + id)
-                    .build();
+            throw new AuthorNotFoundException(id);
         }
         
         DataStore.authors.remove(id);
@@ -187,8 +171,7 @@ public class AuthorResource {
      * 
      * @param id The ID of the author
      * @return Response with a list of books or appropriate error status
-     */
-    @GET
+     */    @GET
     @Path("/{id}/books")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getBooksByAuthor(@PathParam("id") int id) {
@@ -197,9 +180,7 @@ public class AuthorResource {
         // Check if author exists
         if (!DataStore.authors.containsKey(id)) {
             LoggerUtil.logWarning("Failed to retrieve books: Author not found with ID: " + id);
-            return Response.status(Status.NOT_FOUND)
-                    .entity("Author not found with ID: " + id)
-                    .build();
+            throw new AuthorNotFoundException(id);
         }
         
         // Filter books by author ID
