@@ -80,6 +80,7 @@ public class BookResource {
 
         // Save the book to DataStore
         DataStore.books.put(bookId, book);
+        LoggerUtil.logInfo("Book added with ID: " + bookId);
 
         // Return 201 Created with the saved book
         return Response.status(Status.CREATED)

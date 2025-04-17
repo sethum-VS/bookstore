@@ -166,6 +166,24 @@ public class Book {
     }
 
     /**
+     * Gets the quantity of the book (alias for getStockQuantity).
+     * 
+     * @return The book quantity in stock
+     */
+    public int getQuantity() {
+        return getStockQuantity();
+    }
+
+    /**
+     * Sets the quantity of the book (alias for setStockQuantity).
+     * 
+     * @param quantity The book quantity to set
+     */
+    public void setQuantity(int quantity) {
+        setStockQuantity(quantity);
+    }
+
+    /**
      * Returns a string representation of the Book object.
      * 
      * @return String representation of the Book
