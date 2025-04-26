@@ -33,7 +33,8 @@ public class BookResource {
      * 
      * @param book The book object in JSON format
      * @return Response with the created book or error message
-     */    @POST
+     */    
+    @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response addBook(Book book) {
@@ -46,9 +47,12 @@ public class BookResource {
         }
         if (book.getIsbn() == null || book.getIsbn().isEmpty()) {
             throw new InvalidInputException("ISBN is required");
-        }
-        if (book.getPublicationYear() <= 0) {
+        }        if (book.getPublicationYear() <= 0) {
             throw new InvalidInputException("Valid publication year is required");
+        }
+        // Check if publication year is in the future
+        if (book.getPublicationYear() > java.time.Year.now().getValue()) {
+            throw new InvalidInputException("Publication year cannot be in the future");
         }
         if (book.getPrice() <= 0) {
             throw new InvalidInputException("Valid price is required");
@@ -94,7 +98,8 @@ public class BookResource {
      * 
      * @param id The ID of the book to retrieve
      * @return Response with the book or 404 if not found
-     */    @GET
+     */    
+    @GET
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getBookById(@PathParam("id") int id) {
@@ -116,7 +121,8 @@ public class BookResource {
      * @param id The ID of the book to update
      * @param book The updated book data
      * @return Response with the updated book or appropriate error status
-     */    @PUT
+     */    
+    @PUT
     @Path("/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -145,6 +151,11 @@ public class BookResource {
         if (book.getPublicationYear() <= 0) {
             LoggerUtil.logWarning("Failed to update book: Valid publication year is required");
             throw new InvalidInputException("Valid publication year is required");
+        }
+        // Check if publication year is in the future
+        if (book.getPublicationYear() > java.time.Year.now().getValue()) {
+            LoggerUtil.logWarning("Failed to update book: Publication year cannot be in the future");
+            throw new InvalidInputException("Publication year cannot be in the future");
         }
         if (book.getPrice() <= 0) {
             LoggerUtil.logWarning("Failed to update book: Valid price is required");
@@ -176,7 +187,8 @@ public class BookResource {
      * 
      * @param id The ID of the book to delete
      * @return Response with 204 No Content if successful, or 404 if book not found
-     */    @DELETE
+     */    
+    @DELETE
     @Path("/{id}")
     public Response deleteBook(@PathParam("id") int id) {
         LoggerUtil.logInfo("Attempting to delete book with ID: " + id);

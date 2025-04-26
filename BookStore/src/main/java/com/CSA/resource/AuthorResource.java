@@ -85,7 +85,8 @@ public class AuthorResource {
      * 
      * @param id The ID of the author to retrieve
      * @return Response with the author or 404 if not found
-     */    @GET
+     */    
+    @GET
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getAuthorById(@PathParam("id") int id) {
@@ -109,7 +110,8 @@ public class AuthorResource {
      * @param id The ID of the author to update
      * @param updatedAuthor The updated author data
      * @return Response with the updated author or appropriate error status
-     */    @PUT
+     */    
+    @PUT
     @Path("/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -150,7 +152,8 @@ public class AuthorResource {
      * 
      * @param id The ID of the author to delete
      * @return Response with 204 No Content if successful, or 404 if author not found
-     */    @DELETE
+     */    
+    @DELETE
     @Path("/{id}")
     public Response deleteAuthor(@PathParam("id") int id) {
         LoggerUtil.logInfo("Attempting to delete author with ID: " + id);
@@ -171,7 +174,8 @@ public class AuthorResource {
      * 
      * @param id The ID of the author
      * @return Response with a list of books or appropriate error status
-     */    @GET
+     */    
+    @GET
     @Path("/{id}/books")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getBooksByAuthor(@PathParam("id") int id) {
