@@ -4,22 +4,22 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.CSA</groupId>
-    <artifactId>javax-test</artifactId>
+    <artifactId>BookStore</artifactId>
     <packaging>war</packaging>
     <version>1.0-SNAPSHOT</version>
-    <name>javax-test</name>
+    <name>BookStore</name>
 
     <build>
-        <finalName>javax-test</finalName>
+        <finalName>BookStore</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.0</version>
+                <version>3.8.1</version>
                 <inherited>true</inherited>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <source>8</source>
+                    <target>8</target>
                 </configuration>
             </plugin>
         </plugins>
